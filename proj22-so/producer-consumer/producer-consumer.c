@@ -50,6 +50,14 @@ int pcq_create(pc_queue_t *queue, size_t capacity) {
         pthread_mutex_destroy(&queue->pcq_tail_lock);
         return -1;
     }
+    if (pthread_cond_init(&queue->pcq_pusher_condvar, NULL) == -1) {
+        free(queue->pcq_buffer);
+        pthread_mutex_destroy(&queue->pcq_current_size_lock);
+        pthread_mutex_destroy(&queue->pcq_head_lock);
+        pthread_mutex_destroy(&queue->pcq_tail_lock);
+        pthread_mutex_destroy(&queue->pcq_pusher_condvar_lock);
+        return -1;
+    }
     if (pthread_mutex_init(&queue->pcq_popper_condvar_lock, NULL) == -1) {
         free(queue->pcq_buffer);
         pthread_mutex_destroy(&queue->pcq_current_size_lock);
@@ -57,14 +65,6 @@ int pcq_create(pc_queue_t *queue, size_t capacity) {
         pthread_mutex_destroy(&queue->pcq_tail_lock);
         pthread_mutex_destroy(&queue->pcq_pusher_condvar_lock);
         pthread_cond_destroy(&queue->pcq_pusher_condvar);
-        return -1;
-    }
-    if (pthread_cond_init(&queue->pcq_pusher_condvar, NULL) == -1) {
-        free(queue->pcq_buffer);
-        pthread_mutex_destroy(&queue->pcq_current_size_lock);
-        pthread_mutex_destroy(&queue->pcq_head_lock);
-        pthread_mutex_destroy(&queue->pcq_tail_lock);
-        pthread_mutex_destroy(&queue->pcq_pusher_condvar_lock);
         return -1;
     }
     if (pthread_cond_init(&queue->pcq_popper_condvar, NULL) == -1) {
